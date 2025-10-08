@@ -1,605 +1,165 @@
-<!DOCTYPE html>
-<html>
-
+<!doctype html>
+<html lang="en">
 <head>
-	<title>three.js css3d - periodic table</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-	<link type="text/css" rel="stylesheet" href="main.css">
-	<style>
-		a {
-			color: #8ff;
-		}
-
-		#menu {
-			position: absolute;
-			bottom: 20px;
-			width: 100%;
-			text-align: center;
-		}
-
-		.element {
-			width: 120px;
-			height: 160px;
-			box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.5);
-			border: 1px solid rgba(127, 255, 255, 0.25);
-			font-family: Helvetica, sans-serif;
-			text-align: center;
-			line-height: normal;
-			cursor: default;
-		}
-
-		.element:hover {
-			box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.75);
-			border: 1px solid rgba(127, 255, 255, 0.75);
-		}
-
-		.element .number {
-			position: absolute;
-			top: 20px;
-			right: 20px;
-			font-size: 12px;
-			color: rgba(127, 255, 255, 0.75);
-		}
-
-		.element .symbol {
-			position: absolute;
-			top: 40px;
-			left: 0px;
-			right: 0px;
-			font-size: 60px;
-			font-weight: bold;
-			color: rgba(255, 255, 255, 0.75);
-			text-shadow: 0 0 10px rgba(0, 255, 255, 0.95);
-		}
-
-		.element .details {
-			position: absolute;
-			bottom: 5px;
-			left: 0px;
-			right: 0px;
-			font-size: 12px;
-			color: rgba(127, 255, 255, 0.75);
-		}
-
-		button {
-			color: rgba(127, 255, 255, 0.75);
-			background: transparent;
-			outline: 1px solid rgba(127, 255, 255, 0.75);
-			border: 0px;
-			padding: 5px 10px;
-			cursor: pointer;
-		}
-
-		button:hover {
-			background-color: rgba(0, 255, 255, 0.5);
-		}
-
-		button:active {
-			color: #000000;
-			background-color: rgba(0, 255, 255, 0.75);
-		}
-
-		#legend {
-			position: fixed;
-			right: 16px;
-			bottom: 16px;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			font-family: Helvetica, Arial, sans-serif;
-			color: #fff;
-			z-index: 9999;
-		}
-
-		.legend-bar {
-			width: 120px;
-			height: 12px;
-			border-radius: 6px;
-			box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-			background: linear-gradient(90deg, #d9534f 0%, #f0ad4e 35%, #5cb85c 100%);
-			border: 1px solid rgba(255, 255, 255, 0.12);
-		}
-
-		.legend-label {
-			font-size: 12px;
-			opacity: 0.95;
-		}
-	</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Google Login Example</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 24px; }
+    .container { max-width: 720px; margin: 0 auto; }
+    .card { border: 1px solid #ddd; padding: 16px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .profile { display: flex; gap: 12px; align-items: center; }
+    .profile img { width: 72px; height: 72px; border-radius: 50%; }
+    .meta { display: flex; flex-direction: column; }
+    .actions { margin-top: 12px; }
+    #g_id_onload { display:none; }
+  </style>
 </head>
-
 <body>
-
-	<!-- Welcome banner populated from Google login (if present) -->
-	<div id="welcome-banner"
-		style="position:fixed; top:12px; right:12px; z-index:10000; display:none; align-items:center; gap:8px; background:rgba(0,0,0,0.45); padding:6px 10px; border-radius:20px; color:#fff; font-family:Helvetica, Arial;">
-		<img id="welcome-pic" src="" alt="" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
-		<span id="welcome-name" style="font-size:13px; font-weight:600"></span>
-	</div>
-
-	<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> css3d - periodic table.
-	</div>
-	<div id="container"></div>
-	<div id="menu">
-		<button id="table">TABLE</button>
-		<button id="sphere">SPHERE</button>
-		<button id="helix">HELIX</button>
-		<button id="grid">GRID</button>
-	</div>
-
-	<!-- <script type="importmap">
-			{
-				"imports": {
-					"three": "../build/three.module.js",
-					"three/addons/": "./jsm/"
-				}
-			}
-		</script> -->
-
-	<script type="importmap">
-	{
-	"imports": {
-		"three": "./build/three.module.js",
-		"three/addons/": "./jsm/"
-		}
-	}
-	</script>
-
-
-	<script type="module">
-
-		import * as THREE from 'three';
-
-		import TWEEN from 'three/addons/libs/tween.module.js';
-		import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-		import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
-
-		// URL of the published Google Sheets CSV
-		const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTv68m2wPcL6GNJPh1tqEV2UPjbfmRnegBpdNW86uZW5xwzv9ZcBENVw8TpK8iiiholaKCNKkxztA52/pub?output=csv';
-
-		let camera, scene, renderer;
-		let controls;
-
-		const objects = [];
-		const targets = { table: [], sphere: [], helix: [], grid: [] };
-
-		// Original periodic table column,row mapping (from the classic example)
-		// Each entry: [column (1..18), row]
-		const periodicLayout = [
-			[1, 1], [18, 1], [1, 2], [2, 2], [13, 2], [14, 2], [15, 2], [16, 2], [17, 2], [18, 2],
-			[1, 3], [2, 3], [13, 3], [14, 3], [15, 3], [16, 3], [17, 3], [18, 3],
-			[1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [8, 4], [9, 4], [10, 4], [11, 4], [12, 4], [13, 4], [14, 4], [15, 4], [16, 4], [17, 4], [18, 4],
-			[1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5], [7, 5], [8, 5], [9, 5], [10, 5], [11, 5], [12, 5], [13, 5], [14, 5], [15, 5], [16, 5], [17, 5], [18, 5],
-			[1, 6], [2, 6], [4, 9], [5, 9], [6, 9], [7, 9], [8, 9], [9, 9], [10, 9], [11, 9], [12, 9], [13, 9], [14, 9], [15, 9], [16, 9], [17, 9], [18, 9],
-			[4, 6], [5, 6], [6, 6], [7, 6], [8, 6], [9, 6], [10, 6], [11, 6], [12, 6], [13, 6], [14, 6], [15, 6], [16, 6], [17, 6], [18, 6],
-			[1, 7], [2, 7], [4, 10], [5, 10], [6, 10], [7, 10], [8, 10], [9, 10], [10, 10], [11, 10], [12, 10], [13, 10], [14, 10], [15, 10], [16, 10], [17, 10], [18, 10],
-			// [4,11],[5,11],[6,11],[7,11],[8,11],[9,11],[10,11],[11,11],[12,11],[13,11],[14,11],[15,11],[16,11],[17,11],[18,11],
-			// [4,12],[5,12],[6,12],[7,12],[8,12],[9,12],[10,12],[11,12],[12,12],[13,12],[14,12],[15,12],[16,12],[17,12],[18,12],
-			// [4,13],[5,13],[6,13],[7,13],[8,13],[9,13],[10,13],[11,13],[12,13],[13,13],[14,13],[15,13],[16,13],[17,13],[18,13],
-			// [4,14],[5,14],[6,14],[7,14],[8,14],[9,14],[10,14],[11,14],[12,14],[13,14],[14,14],[15,14],[16,14],[17,14],[18,14],
-			// [4,15],[5,15],[6,15],[7,15],[8,15],[9,15],[10,15],[11,15],[12,15],[13,15],[14,15],[15,15],[16,15],[17,15],[18,15],
-			// [4,16],[5,16],[6,16],[7,16],[8,16],[9,16],[10,16],[11,16],[12,16],[13,16],[14,16],[15,16],[16,16],[17,16],[18,16],
-			[4, 7], [5, 7], [6, 7], [7, 7], [8, 7], [9, 7], [10, 7], [11, 7], [12, 7], [13, 7], [14, 7], [15, 7], [16, 7], [17, 7], [18, 7]
-		];
-
-		// Simple CSV parser that handles quoted fields
-		function parseCSV(text) {
-			function parseLine(line) {
-				const result = [];
-				let cur = '';
-				let inQuotes = false;
-				for (let i = 0; i < line.length; i++) {
-					const ch = line[i];
-					if (ch === '"') {
-						if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; } else { inQuotes = !inQuotes; }
-					} else if (ch === ',' && !inQuotes) {
-						result.push(cur);
-						cur = '';
-					} else {
-						cur += ch;
-					}
-				}
-				result.push(cur);
-				return result;
-			}
-
-			const lines = text.trim().split(/\r?\n/);
-			if (lines.length === 0) return [];
-			const headers = parseLine(lines[0]).map(h => h.trim());
-			const rows = [];
-			for (let i = 1; i < lines.length; i++) {
-				if (!lines[i].trim()) continue;
-				const values = parseLine(lines[i]);
-				const obj = {};
-				for (let j = 0; j < headers.length; j++) {
-					obj[headers[j]] = values[j] !== undefined ? values[j] : '';
-				}
-				rows.push(obj);
-			}
-			return rows;
-		}
-
-		async function loadCSVData() {
-			try {
-				const res = await fetch(CSV_URL);
-				if (!res.ok) throw new Error('Failed to fetch CSV: ' + res.status);
-				const txt = await res.text();
-				return parseCSV(txt);
-			} catch (e) {
-				console.error('Error loading CSV', e);
-				return [];
-			}
-		}
-
-		// parse Net Worth strings like "$123,456", "123K", "1.2M" into numeric value
-		function parseNetWorth(s) {
-			if (!s) return NaN;
-			s = String(s).trim();
-			// remove currency symbols and spaces
-			s = s.replace(/\s+/g, '').replace(/\$/g, '').replace(/,/g, '');
-			// match number and optional suffix
-			const m = s.match(/^\(?([0-9]*\.?[0-9]+)\)?\s*([kKmMbB])?$/);
-			if (m) {
-				let num = parseFloat(m[1]);
-				const suf = m[2] ? m[2].toLowerCase() : '';
-				if (suf === 'k') num *= 1e3;
-				if (suf === 'm') num *= 1e6;
-				if (suf === 'b') num *= 1e9;
-				return num;
-			}
-			// last resort: extract leading number
-			const v = parseFloat(s);
-			return isNaN(v) ? NaN : v;
-		}
-
-		function tileColorForNetWorth(s) {
-			const v = parseNetWorth(s);
-			if (isNaN(v)) return null;
-			// thresholds: Red < $100K, Orange 100K..200K, Green > $200K
-			// return rgba strings (alpha 0.9) to keep a slightly translucent look
-			if (v < 100000) return 'rgba(239,48,34,' + (Math.random() * 0.2 + 0.25) + ')'; // #EF3022 -> red
-			if (v <= 200000) return 'rgba(253,202,53,' + (Math.random() * 0.2 + 0.25) + ')'; // #FDCA35 -> orange
-			return 'rgba(58,159,72,' + (Math.random() * 0.2 + 0.25) + ')'; // #3A9F48 -> green
-		}
-
-		// try to find a Net Worth value in the CSV row using tolerant header matching
-		function getNetWorthValue(row) {
-			if (!row) return null;
-			// direct aliases
-			if (row['Net Worth']) return row['Net Worth'];
-			if (row.NetWorth) return row.NetWorth;
-			if (row['Net_Worth']) return row['Net_Worth'];
-			// try case-insensitive and space-insensitive matching
-			for (const k of Object.keys(row)) {
-				const nk = k.replace(/\s+/g, '').toLowerCase();
-				if (nk === 'networth' || nk.includes('networth')) return row[k];
-			}
-			return null;
-		}
-
-		// Update styles: small perf and focus hints
-		const styleSheet = document.querySelector('style');
-		if (styleSheet) {
-			styleSheet.textContent += '\n.element { will-change: transform; }\n.element .photo { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); width: 72px; height: 72px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 8px rgba(0,0,0,0.4); }\n.element .symbol { top: 110px; font-size: 14px; font-weight: bold; }\n.element .country { position: absolute; top: 8px; left: 12px; font-size: 11px; color: rgba(255,255,255,0.85); }\n.element .age { position: absolute; top: 8px; right: 12px; font-size: 12px; color: rgba(255,255,255,0.9); }\n.element:focus { outline: 2px solid rgba(0,255,255,0.9); }';
-		}
-
-		// Initialize after fetching CSV data
-		async function init() {
-
-			const data = await loadCSVData();
-
-			camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
-			camera.position.z = 3000;
-
-			scene = new THREE.Scene();
-
-			// create elements from CSV rows
-			for (let i = 0; i < data.length; i++) {
-
-				const row = data[i];
-				// skip completely empty rows (no visible fields) to avoid stray blank tiles
-				if (row && Object.values(row).every(v => String(v).trim() === '')) continue;
-
-				const element = document.createElement('div');
-				element.className = 'element';
-				// determine background color from Net Worth when available
-				const nwRaw = getNetWorthValue(row);
-				const tileColor = tileColorForNetWorth(nwRaw);
-				if (tileColor) {
-					// use solid color for net worth tiles
-					element.style.backgroundColor = tileColor;
-				} else {
-					// fallback to original translucent teal
-					element.style.backgroundColor = 'rgba(0,127,127,' + (Math.random() * 0.5 + 0.25) + ')';
-				}
-				element.tabIndex = 0;
-
-				// const number = document.createElement( 'div' );
-				// number.className = 'number';
-				// number.textContent = i + 1;
-				// element.appendChild( number );
-
-				// Photo (if present) - put photo in a wrapper so we can overlay country and age on top
-				let photoWrap = null;
-				if (row.Photo) {
-					photoWrap = document.createElement('div');
-					photoWrap.className = 'photoWrap';
-					const img = document.createElement('img');
-					img.className = 'photo';
-					img.src = row.Photo;
-					img.alt = row.Name || ('Person ' + (i + 1));
-					photoWrap.appendChild(img);
-					// overlay container for country/age
-					const overlay = document.createElement('div');
-					overlay.className = 'photoOverlay';
-					photoWrap.appendChild(overlay);
-					element.appendChild(photoWrap);
-				}
-
-				// Name shown in the symbol area (reduced size when photo present)
-				const symbol = document.createElement('div');
-				symbol.className = 'symbol';
-				symbol.textContent = row.Name || '';
-				element.appendChild(symbol);
-
-				// Country and Age - place into the photo overlay when possible, otherwise place absolutely on the element
-				if (row.Country) {
-					const country = document.createElement('div');
-					country.className = 'country';
-					country.textContent = row.Country;
-					if (photoWrap) {
-						photoWrap.querySelector('.photoOverlay').appendChild(country);
-					} else {
-						element.appendChild(country);
-					}
-				}
-
-				if (row.Age) {
-					const age = document.createElement('div');
-					age.className = 'age';
-					age.textContent = row.Age;
-					if (photoWrap) {
-						photoWrap.querySelector('.photoOverlay').appendChild(age);
-					} else {
-						element.appendChild(age);
-					}
-				}
-
-				const details = document.createElement('div');
-				details.className = 'details';
-				// Interest maps to atomic-mass area (Net Worth removed)
-				details.innerHTML = (row.Interest ? (row.Interest) : '');
-				element.appendChild(details);
-
-				// ARIA
-				element.setAttribute('role', 'group');
-				element.setAttribute('aria-label', (row.Name || 'Person') + (row.Country ? (', ' + row.Country) : ''));
-
-				const objectCSS = new CSS3DObject(element);
-				objectCSS.position.x = Math.random() * 4000 - 2000;
-				objectCSS.position.y = Math.random() * 4000 - 2000;
-				objectCSS.position.z = Math.random() * 4000 - 2000;
-				scene.add(objectCSS);
-
-				objects.push(objectCSS);
-
-				// table target: try to use original periodic table mapping if available
-				let object;
-				if (periodicLayout[i]) {
-					const colRow = periodicLayout[i];
-					const col = colRow[0];
-					const rowIdx = colRow[1];
-					object = new THREE.Object3D();
-					object.position.x = (col * 140) - 1330;
-					object.position.y = - (rowIdx * 180) + 990;
-				} else {
-					// fallback simple 5-column grid
-					const cols = 5;
-					const col = (i % cols) + 1; // 1..5
-					const rowIndex = Math.floor(i / cols) + 1;
-					object = new THREE.Object3D();
-					object.position.x = (col * 140) - 1330;
-					object.position.y = - (rowIndex * 180) + 990;
-				}
-				targets.table.push(object);
-			}
-
-			// sphere
-
-			const vector = new THREE.Vector3();
-
-			for (let i = 0, l = objects.length; i < l; i++) {
-
-				const phi = Math.acos(- 1 + (2 * i) / l);
-				const theta = Math.sqrt(l * Math.PI) * phi;
-
-				const object = new THREE.Object3D();
-
-				object.position.setFromSphericalCoords(800, phi, theta);
-
-				vector.copy(object.position).multiplyScalar(2);
-
-				object.lookAt(vector);
-
-				targets.sphere.push(object);
-
-			}
-
-			// helix - Left and Right double helix
-			{
-				const total = objects.length;
-				const half = Math.ceil(total / 2); // first half -> left, second half -> right
-				const radius = 900;
-				const thetaStep = 0.35; // angular step per item along a strand
-				const yStep = 16; // vertical step per item along a strand
-				const yOffset = 450;
-				const separation = 600; // lateral separation between left and right helices
-
-				for (let i = 0; i < total; i++) {
-
-					const isLeft = i < half;
-					const idx = isLeft ? i : (i - half);
-					const phase = isLeft ? 0 : Math.PI; // opposite phase for right strand
-					const theta = idx * thetaStep + Math.PI + phase;
-					const y = - (idx * yStep) + yOffset;
-
-					const object = new THREE.Object3D();
-
-					object.position.setFromCylindricalCoords(radius, theta, y);
-					// shift whole strand left/right so they are side-by-side
-					object.position.x += isLeft ? - separation : separation;
-
-					vector.x = object.position.x * 2;
-					vector.y = object.position.y;
-					vector.z = object.position.z * 2;
-
-					object.lookAt(vector);
-
-					targets.helix.push(object);
-
-				}
-			}
-
-			// grid
-
-			// grid (Height x Length x Width): 4 x 5 x 10
-			{
-				const length = 5; // number of columns (x)
-				const height = 4; // number of rows (y)
-				const width = 10; // number of layers (z)
-				const xSpacing = 400;
-				const ySpacing = 400;
-				const zSpacing = 1000;
-				const xOffset = ((length - 1) * xSpacing) / 2; // center horizontally
-				const yOffset = ((height - 1) * ySpacing) / 2; // center vertically
-				const zOffset = ((width - 1) * zSpacing) / 2; // center depth
-
-				for (let i = 0; i < objects.length; i++) {
-
-					const object = new THREE.Object3D();
-					const col = i % length; // 0..length-1
-					const row = Math.floor(i / length) % height; // 0..height-1
-					const layer = Math.floor(i / (length * height)); // 0..width-1
-
-					object.position.x = (col * xSpacing) - xOffset;
-					object.position.y = - (row * ySpacing) + yOffset;
-					object.position.z = (layer * zSpacing) - zOffset;
-
-					targets.grid.push(object);
-
-				}
-			}
-
-			// renderer
-			renderer = new CSS3DRenderer();
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			document.getElementById('container').appendChild(renderer.domElement);
-
-			// controls
-			controls = new TrackballControls(camera, renderer.domElement);
-			controls.minDistance = 500;
-			controls.maxDistance = 6000;
-			controls.addEventListener('change', render);
-
-			// buttons
-			document.getElementById('table').addEventListener('click', function () { transform(targets.table, 2000); });
-			document.getElementById('sphere').addEventListener('click', function () { transform(targets.sphere, 2000); });
-			document.getElementById('helix').addEventListener('click', function () { transform(targets.helix, 2000); });
-			document.getElementById('grid').addEventListener('click', function () { transform(targets.grid, 2000); });
-
-			transform(targets.table, 2000);
-
-			window.addEventListener('resize', onWindowResize);
-
-		}
-
-		function transform(targets, duration) {
-
-			TWEEN.removeAll();
-
-			for (let i = 0; i < objects.length; i++) {
-
-				const object = objects[i];
-				const target = targets[i];
-
-				new TWEEN.Tween(object.position)
-					.to({ x: target.position.x, y: target.position.y, z: target.position.z }, Math.random() * duration + duration)
-					.easing(TWEEN.Easing.Exponential.InOut)
-					.start();
-
-				new TWEEN.Tween(object.rotation)
-					.to({ x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration)
-					.easing(TWEEN.Easing.Exponential.InOut)
-					.start();
-
-			}
-
-			// use an empty object as the dummy tween target (avoid using `this` in modules)
-			new TWEEN.Tween({})
-				.to({}, duration * 2)
-				.onUpdate(render)
-				.start();
-
-		}
-
-		function onWindowResize() {
-
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-
-			renderer.setSize(window.innerWidth, window.innerHeight);
-
-			render();
-
-		}
-
-		function animate() {
-
-			requestAnimationFrame(animate);
-
-			TWEEN.update();
-
-			controls.update();
-
-		}
-
-		function render() {
-
-			renderer.render(scene, camera);
-
-		}
-
-		// start
-		init().then(() => { animate(); });
-
-	</script>
-
-	<!-- legend: LOW -> High -->
-	<div id="legend">
-		<span class="legend-label">LOW</span>
-		<div class="legend-bar"></div>
-		<span class="legend-label">High</span>
-	</div>
-
-	<script>
-		// Read Google profile from sessionStorage (set by google_login.html)
-		(function () {
-			try {
-				const raw = sessionStorage.getItem('g_profile');
-				if (!raw) return;
-				const profile = JSON.parse(raw);
-				if (!profile) return;
-				const banner = document.getElementById('welcome-banner');
-				const pic = document.getElementById('welcome-pic');
-				const name = document.getElementById('welcome-name');
-				if (pic && profile.picture) pic.src = profile.picture;
-				if (name) name.textContent = profile.name || profile.email || '';
-				if (banner) banner.style.display = 'flex';
-			} catch (e) {
-				// ignore
-			}
-		})();
-	</script>
+  <header style="padding:18px 24px 6px 24px;">
+    <h1 style="margin:0; font-size:48px; font-weight:600;">Sign In With Google</h1>
+  </header>
+
+  <main style="display:flex; align-items:center; justify-content:center; height:70vh;">
+    <div style="width:620px; height:360px; border:2px solid #111; box-shadow: 0 0 0 8px rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:center;">
+      <div style="width:420px; height:220px; background:#fff; border-radius:6px; box-shadow:0 4px 18px rgba(0,0,0,0.08); display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="text-align:center; color:#333; margin-bottom:14px;">
+          <h2 style="margin:0; font-size:18px; font-weight:600;">Welcome Back</h2>
+          <p style="margin:6px 0 0 0; font-size:13px; color:#666;">Please sign in to continue</p>
+        </div>
+
+        <div id="button-container" style="display:flex; align-items:center; justify-content:center; width:100%;"></div>
+
+        <div class="actions" style="margin-top:8px;">
+          <button id="signout-btn" style="display:none">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <script>
+    // Replace this with your Client ID or pass it via ?client_id=...
+    const CLIENT_ID = '7458319065-7s4n1ujqvo8vaes5jl76jnl0q4os29cj.apps.googleusercontent.com';
+
+    function getClientIdFromUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('client_id') || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    const clientId = CLIENT_ID || getClientIdFromUrl();
+
+    if (!clientId) {
+      const el = document.getElementById('button-container');
+      el.innerHTML = '<p style="color:crimson">No Client ID provided. Add your Client ID to the <code>CLIENT_ID</code> constant in the file or pass it as <code>?client_id=YOUR_CLIENT_ID</code> in the URL.</p>';
+    }
+
+    // Parse JWT payload helper
+    function parseJwt (token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    let tokenResponse = null;
+
+    function handleCredentialResponse(response) {
+      // response.credential is the ID token (JWT)
+      tokenResponse = response;
+      const payload = parseJwt(response.credential);
+      if (!payload) return;
+
+      // Update UI if present (guard against missing elements)
+      try {
+        const pName = document.getElementById('profile-name');
+        if (pName) pName.textContent = payload.name || payload.email;
+        const pEmail = document.getElementById('profile-email');
+        if (pEmail) pEmail.textContent = payload.email || '';
+        const pPic = document.getElementById('profile-pic');
+        if (pPic) pPic.src = payload.picture || '';
+        const pBox = document.getElementById('profile');
+        if (pBox) pBox.style.display = 'flex';
+        const sBtn = document.getElementById('signout-btn');
+        if (sBtn) sBtn.style.display = 'inline-block';
+        const tDbg = document.getElementById('token-debug');
+        if (tDbg) { tDbg.style.display = 'block'; tDbg.textContent = JSON.stringify(payload, null, 2); }
+      } catch (e) {
+        // ignore UI errors
+      }
+
+      // Save profile to sessionStorage for other pages to read
+      try { sessionStorage.setItem('g_profile', JSON.stringify(payload)); } catch (e) { /* ignore */ }
+
+      // Robust redirect: try to navigate to the requested hash first, then fallback to direct file.
+      (function redirectToPeriodic() {
+        const hashTarget = 'css3d_periodictable.html#file:css3d_periodictable.html';
+        try {
+          // try assign (better than href in some cases)
+          window.location.assign(hashTarget);
+        } catch (e) {
+          try { window.location.href = hashTarget; } catch (e2) { /* ignore */ }
+        }
+      })();
+    }
+
+    function initializeGsi() {
+      if (!clientId) return;
+
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleCredentialResponse
+      });
+
+      // Render the button into the container
+      window.google.accounts.id.renderButton(
+        document.getElementById('button-container'),
+          { theme: 'outline', size: 'large', width: '280' }  // customization attributes
+      );
+
+      // Optional: prompt the One Tap UX
+      // window.google.accounts.id.prompt();
+    }
+
+    document.getElementById('signout-btn').addEventListener('click', () => {
+      // To sign out, remove the token from memory and call revoke if you want
+      if (tokenResponse && tokenResponse.credential) {
+        // Revoke the token via Google's revoke endpoint
+        const url = 'https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(tokenResponse.credential);
+        fetch(url, { method: 'POST', headers: { 'Content-type': 'application/x-www-form-urlencoded' } })
+          .catch(() => {});
+      }
+
+      tokenResponse = null;
+      document.getElementById('profile').style.display = 'none';
+      document.getElementById('signout-btn').style.display = 'none';
+      document.getElementById('token-debug').style.display = 'none';
+    });
+
+    // Initialize when library is loaded
+    function tryInit() {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        initializeGsi();
+      } else {
+        // retry once the script has loaded; the external script is deferred/async
+        setTimeout(tryInit, 200);
+      }
+    }
+
+    tryInit();
+  </script>
 </body>
-
 </html>
